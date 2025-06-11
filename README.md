@@ -2,7 +2,7 @@
 
 ---
 
-```markdown
+
 # 🏰 Generador y Solucionador de Laberintos en C++
 
 Este proyecto en C++ permite generar y resolver laberintos de manera interactiva o mediante parámetros de entrada. Utiliza algoritmos clásicos como **DFS (búsqueda en profundidad)** para generar el laberinto, y **BFS (búsqueda en anchura)** para encontrar la ruta óptima desde la entrada hasta la salida.
