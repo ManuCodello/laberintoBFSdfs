@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador y Solucionador de Laberintos</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        select, input {
+            padding: 8px;
+            border: 1px solid #bdc3c7;
+            border-radius: 4px;
+        }
+        
+        .maze-container {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .maze {
+            display: inline-block;
+            border: 2px solid #34495e;
+            background-color: #2c3e50;
+        }
+        
+        .row {
+            display: flex;
+        }
+        
+        .cell {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .wall {
+            background-color: #34495e;
+        }
+        
+        .path {
+            background-color: #ecf0f1;
+        }
+        
+        .current-dfs {
+            background-color: #f39c12;
+            animation: pulse-orange 1s infinite;
+        }
+        
+        .current-bfs {
+            background-color: #2ecc71;
+            animation: pulse-green 1s infinite;
+        }
+        
+        .visited-dfs {
+            background-color: #f1c40f;
+        }
+        
+        .visited-bfs {
+            background-color: #27ae60;
+        }
+        
+        .solution {
+            background-color: #e74c3c;
+            animation: pulse-red 0.5s infinite;
+        }
+        
+        .start {
+            background-color: #3498db;
+            font-weight: bold;
+        }
+        
+        .end {
+            background-color: #9b59b6;
+            font-weight: bold;
+        }
+        
+        .wall-to-break {
+            background-color: #e67e22;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 20px;
+            gap: 20px;
+        }
+        
+        .stat-box {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .stat-box h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #bdc3c7;
+            padding-bottom: 5px;
+        }
+        
+        .log-container {
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #2c3e50;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 3px 0;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        @keyframes pulse-orange {
+            0% { background-color: #f39c12; }
+            50% { background-color: #e67e22; }
+            100% { background-color: #f39c12; }
+        }
+        
+        @keyframes pulse-green {
+            0% { background-color: #2ecc71; }
+            50% { background-color: #27ae60; }
+            100% { background-color: #2ecc71; }
+        }
+        
+        @keyframes pulse-red {
+            0% { background-color: #e74c3c; }
+            50% { background-color: #c0392b; }
+            100% { background-color: #e74c3c; }
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏰 Generador y Solucionador de Laberintos 🏰</h1>
+        
+        <div class="controls">
+            <div>
+                <label for="width">Ancho:</label>
+                <input type="number" id="width" min="5" max="50" value="21">
+            </div>
+            <div>
+                <label for="height">Alto:</label>
+                <input type="number" id="height" min="5" max="50" value="21">
+            </div>
+            <button id="generateBtn">Generar Laberinto (DFS)</button>
+            <button id="solveBtn" disabled>Resolver (BFS)</button>
+            <button id="resetBtn">Reiniciar</button>
+            <select id="speed">
+                <option value="10">Muy Rápido</option>
+                <option value="50">Rápido</option>
+                <option value="100" selected>Normal</option>
+                <option value="300">Lento</option>
+                <option value="500">Muy Lento</option>
+            </select>
+        </div>
+        
+        <div class="maze-container">
+            <div class="maze" id="maze"></div>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #34495e;"></div>
+                <span>Muro</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #ecf0f1;"></div>
+                <span>Camino</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #f39c12;"></div>
+                <span>DFS Actual</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #f1c40f;"></div>
+                <span>DFS Visitado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #2ecc71;"></div>
+                <span>BFS Actual</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #27ae60;"></div>
+                <span>BFS Visitado</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #3498db;"></div>
+                <span>Entrada</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #9b59b6;"></div>
+                <span>Salida</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background-color: #e74c3c;"></div>
+                <span>Solución</span>
+            </div>
+        </div>
+        
+        <div class="stats">
+            <div class="stat-box">
+                <h3>Estadísticas de Generación (DFS)</h3>
+                <div id="genStats">No generado aún</div>
+            </div>
+            <div class="stat-box">
+                <h3>Estadísticas de Solución (BFS)</h3>
+                <div id="solveStats">No resuelto aún</div>
+            </div>
+        </div>
+        
+        <div class="log-container" id="log">
+            <div class="log-entry">Bienvenido al generador y solucionador de laberintos.</div>
+            <div class="log-entry">Configura las dimensiones y haz clic en "Generar Laberinto".</div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración
+        let LAB_WIDTH = 21;
+        let LAB_HEIGHT = 21;
+        let maze = [];
+        let isGenerating = false;
+        let isSolving = false;
+        let animationSpeed = 100;
+        let animationId = null;
+        let startTime = 0;
+        let solutionPath = [];
+        
+        // Elementos del DOM
+        const mazeElement = document.getElementById('maze');
+        const generateBtn = document.getElementById('generateBtn');
+        const solveBtn = document.getElementById('solveBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const speedSelect = document.getElementById('speed');
+        const widthInput = document.getElementById('width');
+        const heightInput = document.getElementById('height');
+        const genStatsElement = document.getElementById('genStats');
+        const solveStatsElement = document.getElementById('solveStats');
+        const logElement = document.getElementById('log');
+        
+        // Inicializar laberinto
+        function initializeMaze() {
+            LAB_WIDTH = parseInt(widthInput.value) || 21;
+            LAB_HEIGHT = parseInt(heightInput.value) || 21;
+            
+            // Asegurar dimensiones impares
+            if (LAB_WIDTH % 2 === 0) LAB_WIDTH++;
+            if (LAB_HEIGHT % 2 === 0) LAB_HEIGHT++;
+            
+            // Limitar dimensiones
+            LAB_WIDTH = Math.max(5, Math.min(51, LAB_WIDTH));
+            LAB_HEIGHT = Math.max(5, Math.min(51, LAB_HEIGHT));
+            
+            // Actualizar inputs
+            widthInput.value = LAB_WIDTH;
+            heightInput.value = LAB_HEIGHT;
+            
+            maze = Array(LAB_HEIGHT).fill().map(() => Array(LAB_WIDTH).fill('#'));
+            
+            // Establecer entrada y salida
+            maze[0][1] = 'S'; // Entrada (S de Start)
+            maze[LAB_HEIGHT-1][LAB_WIDTH-2] = 'E'; // Salida (E de End)
+            
+            renderMaze();
+        }
+        
+        // Renderizar laberinto
+        function renderMaze() {
+            mazeElement.innerHTML = '';
+            
+            for (let y = 0; y < LAB_HEIGHT; y++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                
+                for (let x = 0; x < LAB_WIDTH; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.x = x;
+                    cell.dataset.y = y;
+                    
+                    switch (maze[y][x]) {
+                        case '#':
+                            cell.classList.add('wall');
+                            break;
+                        case '.':
+                            cell.classList.add('path');
+                            break;
+                        case 'S':
+                            cell.classList.add('start');
+                            cell.textContent = 'S';
+                            break;
+                        case 'E':
+                            cell.classList.add('end');
+                            cell.textContent = 'E';
+                            break;
+                        case 'C': // Current (DFS)
+                            cell.classList.add('current-dfs');
+                            break;
+                        case 'V': // Visited (DFS)
+                            cell.classList.add('visited-dfs');
+                            break;
+                        case 'B': // Current (BFS)
+                            cell.classList.add('current-bfs');
+                            break;
+                        case 'Q': // Visited (BFS)
+                            cell.classList.add('visited-bfs');
+                            break;
+                        case 'W': // Wall to break
+                            cell.classList.add('wall-to-break');
+                            break;
+                        case 'P': // Solution path
+                            cell.classList.add('solution');
+                            break;
+                    }
+                    
+                    row.appendChild(cell);
+                }
+                
+                mazeElement.appendChild(row);
+            }
+        }
+        
+        // Añadir mensaje al log
+        function log(message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            logElement.appendChild(entry);
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+        
+        // Generar laberinto con DFS
+        async function generateMaze() {
+            if (isGenerating) return;
+            
+            isGenerating = true;
+            generateBtn.disabled = true;
+            solveBtn.disabled = true;
+            resetBtn.disabled = true;
+            startTime = performance.now();
+            
+            log("Iniciando generación del laberinto con DFS...");
+            
+            // Inicializar laberinto con paredes
+            initializeMaze();
+            
+            // Pila para DFS
+            const stack = [{x: 1, y: 1}];
+            maze[1][1] = '.';
+            
+            // Direcciones posibles (arriba, abajo, izquierda, derecha) con paso de 2
+            const directions = [
+                {dx: 0, dy: -2}, // Arriba
+                {dx: 0, dy: 2},  // Abajo
+                {dx: -2, dy: 0}, // Izquierda
+                {dx: 2, dy: 0}   // Derecha
+            ];
+            
+            // Función para mezclar array
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // Función recursiva para animación paso a paso
+            async function dfsStep() {
+                if (!isGenerating || stack.length === 0) {
+                    finishGeneration();
+                    return;
+                }
+                
+                const current = stack[stack.length - 1];
+                maze[current.y][current.x] = 'C'; // Marcar como actual
+                renderMaze();
+                
+                // Mezclar direcciones
+                const shuffledDirections = shuffle([...directions]);
+                let found = false;
+                
+                for (const dir of shuffledDirections) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    const wx = current.x + dir.dx / 2;
+                    const wy = current.y + dir.dy / 2;
+                    
+                    // Verificar si la posición es válida y es un muro
+                    if (nx > 0 && nx < LAB_WIDTH - 1 && ny > 0 && ny < LAB_HEIGHT - 1 && maze[ny][nx] === '#') {
+                        // Marcar pared a romper
+                        maze[wy][wx] = 'W';
+                        renderMaze();
+                        
+                        // Esperar para visualización
+                        await new Promise(resolve => setTimeout(resolve, animationSpeed / 2));
+                        
+                        // Romper pared y mover a nueva posición
+                        maze[wy][wx] = '.';
+                        maze[ny][nx] = '.';
+                        stack.push({x: nx, y: ny});
+                        
+                        found = true;
+                        break;
+                    }
+                }
+                
+                if (!found) {
+                    // Retroceder (backtracking)
+                    maze[current.y][current.x] = 'V'; // Marcar como visitado
+                    stack.pop();
+                }
+                
+                renderMaze();
+                
+                // Continuar con el siguiente paso
+                animationId = setTimeout(dfsStep, animationSpeed);
+            }
+            
+            // Iniciar generación
+            dfsStep();
+        }
+        
+        // Finalizar generación
+        function finishGeneration() {
+            isGenerating = false;
+            clearTimeout(animationId);
+            
+            // Marcar celdas visitadas como camino normal
+            for (let y = 0; y < LAB_HEIGHT; y++) {
+                for (let x = 0; x < LAB_WIDTH; x++) {
+                    if (maze[y][x] === 'V' || maze[y][x] === 'C') {
+                        maze[y][x] = '.';
+                    }
+                }
+            }
+            
+            renderMaze();
+            
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            
+            log(`Generación completada en ${duration} ms`);
+            genStatsElement.innerHTML = `
+                <p>Dimensiones: ${LAB_WIDTH} × ${LAB_HEIGHT}</p>
+                <p>Tiempo: ${duration} ms</p>
+                <p>Celdas: ${LAB_WIDTH * LAB_HEIGHT}</p>
+            `;
+            
+            generateBtn.disabled = false;
+            solveBtn.disabled = false;
+            resetBtn.disabled = false;
+        }
+        
+        // Resolver laberinto con BFS
+        async function solveMaze() {
+            if (isSolving || isGenerating) return;
+            
+            isSolving = true;
+            solveBtn.disabled = true;
+            generateBtn.disabled = true;
+            resetBtn.disabled = true;
+            startTime = performance.now();
+            
+            log("Iniciando solución del laberinto con BFS...");
+            
+            // Estructuras para BFS
+            const queue = [{x: 1, y: 0}]; // Comenzar en la entrada
+            const parents = {};
+            const visited = new Set();
+            visited.add("1,0");
+            
+            // Direcciones posibles (arriba, abajo, izquierda, derecha)
+            const directions = [
+                {dx: 0, dy: -1}, // Arriba
+                {dx: 0, dy: 1},  // Abajo
+                {dx: -1, dy: 0}, // Izquierda
+                {dx: 1, dy: 0}   // Derecha
+            ];
+            
+            // Función para animación paso a paso
+            async function bfsStep() {
+                if (!isSolving || queue.length === 0) {
+                    finishSolving(false);
+                    return;
+                }
+                
+                const current = queue.shift();
+                maze[current.y][current.x] = 'B'; // Marcar como actual en BFS
+                renderMaze();
+                
+                // Verificar si es la salida
+                if (current.x === LAB_WIDTH - 2 && current.y === LAB_HEIGHT - 1) {
+                    // Reconstruir camino
+                    solutionPath = [];
+                    let pos = current;
+                    
+                    while (pos.x !== 1 || pos.y !== 0) {
+                        solutionPath.unshift(pos);
+                        const key = `${pos.x},${pos.y}`;
+                        pos = parents[key];
+                    }
+                    solutionPath.unshift({x: 1, y: 0});
+                    
+                    finishSolving(true);
+                    return;
+                }
+                
+                // Explorar vecinos
+                for (const dir of directions) {
+                    const nx = current.x + dir.dx;
+                    const ny = current.y + dir.dy;
+                    const key = `${nx},${ny}`;
+                    
+                    // Verificar si es posición válida y camino libre
+                    if (nx >= 0 && nx < LAB_WIDTH && ny >= 0 && ny < LAB_HEIGHT && 
+                        (maze[ny][nx] === '.' || maze[ny][nx] === 'E') && !visited.has(key)) {
+                        
+                        visited.add(key);
+                        parents[key] = current;
+                        queue.push({x: nx, y: ny});
+                        
+                        // Marcar como visitado en BFS (excepto entrada/salida)
+                        if (!(nx === 1 && ny === 0) && !(nx === LAB_WIDTH - 2 && ny === LAB_HEIGHT - 1)) {
+                            maze[ny][nx] = 'Q';
+                        }
+                    }
+                }
+                
+                // Marcar como visitado
+                if (!(current.x === 1 && current.y === 0)) {
+                    maze[current.y][current.x] = 'Q';
+                }
+                
+                renderMaze();
+                
+                // Continuar con el siguiente paso
+                animationId = setTimeout(bfsStep, animationSpeed);
+            }
+            
+            // Iniciar solución
+            bfsStep();
+        }
+        
+        // Finalizar solución
+        function finishSolving(found) {
+            isSolving = false;
+            clearTimeout(animationId);
+            
+            const endTime = performance.now();
+            const duration = (endTime - startTime).toFixed(2);
+            
+            if (found) {
+                // Mostrar solución
+                for (const pos of solutionPath) {
+                    if (!(pos.x === 1 && pos.y === 0) && !(pos.x === LAB_WIDTH - 2 && pos.y === LAB_HEIGHT - 1)) {
+                        maze[pos.y][pos.x] = 'P';
+                    }
+                }
+                
+                renderMaze();
+                
+                log(`Solución encontrada en ${duration} ms (${solutionPath.length} pasos)`);
+                solveStatsElement.innerHTML = `
+                    <p>Tiempo: ${duration} ms</p>
+                    <p>Longitud del camino: ${solutionPath.length} pasos</p>
+                    <p>Celdas visitadas: ${document.querySelectorAll('.visited-bfs').length}</p>
+                `;
+            } else {
+                log("No se encontró solución para el laberinto");
+                solveStatsElement.innerHTML = `
+                    <p>Tiempo: ${duration} ms</p>
+                    <p>No se encontró solución</p>
+                `;
+            }
+            
+            solveBtn.disabled = false;
+            generateBtn.disabled = false;
+            resetBtn.disabled = false;
+        }
+        
+        // Event listeners
+        generateBtn.addEventListener('click', generateMaze);
+        solveBtn.addEventListener('click', solveMaze);
+        resetBtn.addEventListener('click', () => {
+            isGenerating = false;
+            isSolving = false;
+            clearTimeout(animationId);
+            initializeMaze();
+            log("Laberinto reiniciado");
+            genStatsElement.textContent = "No generado aún";
+            solveStatsElement.textContent = "No resuelto aún";
+            solutionPath = [];
+        });
+        
+        speedSelect.addEventListener('change', () => {
+            animationSpeed = parseInt(speedSelect.value);
+        });
+        
+        // Inicializar
+        initializeMaze();
+    </script>
+</body>
+</html>
