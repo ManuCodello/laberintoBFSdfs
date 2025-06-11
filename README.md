@@ -137,6 +137,4 @@ Este proyecto es de código abierto. Puedes usarlo, modificarlo o distribuirlo l
 ¡Disfruta creando y resolviendo laberintos! 🔄🚶🔥🏁
 ```
 
----
 
-Si tienes un nombre para el repositorio o quieres traducirlo al inglés, ¡puedo ayudarte también! ¿Deseas que agregue una imagen de ejemplo o un GIF del laberinto en ejecución?
